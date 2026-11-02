@@ -1,0 +1,36 @@
+name: Build MadaraTaijutsu
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Teste da logica de coreografia
+        run: |
+          mkdir -p /tmp/sim
+          S=src/main/java/com/madarataijutsu
+          javac -encoding UTF-8 -d /tmp/sim $S/anim/*.java $S/choreo/*.java $S/combat/*.java $S/mode/TaijutsuMode.java tools/ChoreoSimTest.java
+          java -cp /tmp/sim ChoreoSimTest
+
+      - name: Compilar mod
+        run: |
+          chmod +x gradlew
+          ./gradlew setupCIWorkspace build --stacktrace
+
+      - name: Publicar JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: MadaraTaijutsu-1.12.2-1.0.0
+          path: build/libs/MadaraTaijutsu-1.12.2-1.0.0.jar
+          if-no-files-found: error
